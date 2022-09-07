@@ -2,40 +2,44 @@
 title: "Preparing data for analysis using R - Week 1"
 author: "Juan Rivillas"
 date: "August 2022"
-output: 
-  html_notebook:
-    css: rmd.css
-    number_sections: yes
-    toc: yes
-    toc_depth: 3
----
+output:
+  
 
-This code is built on a preliminary R Markdown elaborated by John Pinnet at Imperial College London (The Graduate School).
+---
+Today's session will focus on data taken from the [Nutrition and Aging survey] project.
+
+Five main steps are described in this markdown. 
+
+**Step 1. Preparing work space (import dataset)**. This step includes:
+        Working directory and loading of packages required for the tidying data.
+        Importing data base.
+        Verifying upload and exploring data base.
+
+**Step 2: Overview of the entire dataset **
+        data structure and complete rates 
+        computing frequency tables
+        missing values and outliers
+              
+**Step 3: Visualizing data** 
+        Look at the dispersion of data: Histograms, scatterplot & violin plots
+
+**Step 4: Use table functions to compare groups and describe study population**
+        Baseline characteristics of population study
+        Vector transformation
+        
+**Step 5: Exercise**
+
 
 # Introduction
 
-This workshop introduces the [tidyverse](https://www.tidyverse.org/) packages, which support data processing and visualisation in R.
-All of these packages share the same concepts of data handling, which makes it easier to build workflows that move between different kinds of task:
+This workshop introduces the [tidyverse](https://www.tidyverse.org/) packages, which support data processing and visualisation in R. All of these packages share the same concepts of data handling, which makes it easier to build workflows that move between different kinds of task:
 
 - Reading tabular data (with `readr`)
 - Tidying data (with `tidyr`)
 - Transforming data (with `dplyr`)
 - Data visualization (with `ggplot2`)
-- Applying statistical tests
 
 This workshop assumes a basic familiarity with the R language, otherwise it is higly recommended to look at the introductory *R Programming* material in the suggested books/materials.
-
-
-## Step 1. Preparing work space (import imputed data).
-
-**Working directory and loading of packages required for the tidying data**.
-
-Assign file pathway to save automatically plots and outcomes in pdf format.
-
-```{r}
-setwd("/Users/macbookpro/Documents/U Groningen/Regressions II/Code")
-```
-
 
 
 ![](rconsole.png)
@@ -65,115 +69,26 @@ When the cursor is inside a chunk, you can execute the code using *Ctrl-Shift-En
 A notebook is a living document. You are encouraged to make use of this notebook to try out the example code, alter it, complete the exercises and add your own notes and code chunks. You can insert a new code chunk using the shortcut _Ctrl+Alt+I_.
 
 
+**Step 1. Preparing work space (import dataset)**
+
+#Before you start work, please check your working directory and assign file pathway to save automatically plots and outcomes in pdf format.
+```{r}
 ## Working directory
-
-Before you start work, please check your working directory:
-
-```{r eval=FALSE}
-
 getwd()
+
+setwd("/Users/macbookpro/Documents/U Groningen/")
+
 setwd("~/Documents/U Groningen/Regressions II")
 
+print(getwd())
+```
 ```
 
 You can change the working directory using the files window in RStudio (bottom right).
 Navigate to the directory containing the workshop data and click the cog icon for the "Set as Working Directory" option.
 
 
-## Step 2. Import and load data.
-
-## About packages
-
-Many useful R functions are developed by individuals and research groups and made available to the community as *packages*.
-
-You can find a full list of R packages at the [CRAN](https://cran.r-project.org/) page.
-
-The tidyverse packages are installed with:
-```{r eval=FALSE}
-
-install.packages("tidyverse")
-
-```
-
-and loaded into the workspace with:
-```{r eval=FALSE}
-
-library(tidyverse)
-
-```
-
-Note that this command loads all of the core tidyverse packages, but you can also load them individually as necessary.
-
-
-## The data
-
-Today's session will focus on data taken from the [SABE aging survey 2015] project.
-
-
-# Loading data (**readr**)
-
-## Excel spreadsheets
-
-To begin, we will use the [readxl](https://readxl.tidyverse.org/) package to load data from the relevant sheets in the Excel workbook.
-This package is not part of the core tidyverse, so we need to load it directly:
-
-```{r}
-library(readxl)
-```
-
-The command `read_excel()` reads both xls and xlsx files and detects the format from the extension.
-Today we will only use the first sheet from this workbook.
-
-```{r}
-read_excel("~/Documents/U Groningen/Regressions II/ineqdata.xlsx")
-
-#read_excel("ineqdata.xlsx", sheet = "spreadsheet1")
-```
-
-RStudio shows you the output as a table.
-Let's capture the loaded data using read function:
-
-```{r}
-ineq <- read_excel("~/Documents/U Groningen/Regressions II/ineqdata.xlsx")
-ineq
-
-dfexp <- read_excel("~/Documents/U Groningen/Regressions II/dfexposure.xlsx")
-dfexp
-```
-
-We can get a quick overview of the data using the `str()` function:
-
-```{r}
-str(ineqdata)
-```
-
-
-## Tibbles
-
-Notice that as well the class `data.frame`, the object `ineqdata` also belongs to the classes `tbl_df` and `tbl`.
-This shows that the data has been loaded in the form of a [tibble](https://tibble.tidyverse.org/).
-
-Tibbles are part of the tidyverse architecture. They are like data frames, but they do **less** (e.g., they don't attempt to coerce variables into different types) and complain **more** (e.g., when a variable does not exist). The idea is to force the programmer to deal with issues earlier, and so make it harder to write confusing or broken R code.
-
-## CSV files
-
-Let's look at another, related data set, this time loaded from a CSV file using `read_csv()` from the [readr](https://readr.tidyverse.org/) package:
-
-```{r}
-read_csv("ineqdata.csv")
-```
-
-This is a straightforward numerical tibble which contains a lot of missing values. 
-The table shows social inequalities, diseases and biomarkers for a sample population.
-
-NB `read_csv()` is a different function to `read.csv()` from base R (which outputs a base `data.frame` rather than a `tbl_df`).
-
-Tabular data in other formats (e.g. with tabs as delimiters, or using fixed-width fields) can also be read using other functions from `readr`.
-
-
-# Tidying data (**tidyr**)
-
-The tidyverse packages put a lot of emphasis on working with **tidy** data. What do we mean by that?
+##loading of packages required for the tidying data
 
 Tidy data has the three following attributes:
 
@@ -183,48 +98,118 @@ Tidy data has the three following attributes:
 
 When data is tidy, we can visualise and analyse it more easily.
 
-However, most of the data tables that you encounter "in the wild" will not be tidy by this definition, so the [tidyr](https://tidyr.tidyverse.org/) package provides functions to help reshape them into a tidy form.
+About packages: Many useful R functions are developed by individuals and research groups and made available to the community as *packages*.
 
-Look at the `ineqdata` tibble. What are the observations and what are the variables?
+You can find a full list of R packages at the [CRAN](https://cran.r-project.org/) page.
 
-By setting `na.rm=TRUE`, we discard the cells that did not contain observations.
+The tidyverse packages are installed with:
+```{}
+install.packages("tidyverse")
+```
 
+and loaded into the workspace with:
 
+```{r eval=FALSE}
+library(tidyverse)
+```
+
+Note that this command loads all of the core tidyverse packages, but you can also load them individually as necessary.
+
+load you data and check your data was loaded
 ```{r}
+library(readxl)
+ineqdata <- read_excel("~/Documents/U Groningen/Regressions II/Datasets/ineqdata.xlsx")
+View(ineqdata)
+```
+
+
+Other option to check loaded data:
+
+```{}
+ineqdata
+```
+
+We can get a quick overview of the data using the `str()` function:
+
+```{}
+str(ineqdata)
+```
+
+Check first and last observations in the dataset
+
+```{r eval=FALSE, include=FALSE}
 head(ineq)
 tail(ineq)
+dim(SABE_Colombia)
 ```
 
+Checking missing values in the dataset
 
-## Changing data type
-
-as factor
-as numeric
-as integers
-
-## CSV without headers
-
-Now that `ineqdata` is in a tidy form, let's look at another example. `dfexposure.csv` is a CSV file containing social exposures and population for various diseases for the year 2015.
-
-Actually this file is not in a correct CSV format, because it is missing a header row. You can open it in Excel to verify this. However, we can still load it using `read_csv()` as follows:
+#Loading packages to work with missing values
+#Load packages for descriptive analysis of missingness
 
 ```{r}
-exposure <- read_csv("~/Documents/U Groningen/Regressions II/dfexposure.csv", col_names=FALSE)
-exposure
+install.packages ("mice")
+install.packages ("naniar")
+
+install.packages ("VIM")
+
+library(mice)    #Loading the mice package
+library(VIM)     #VIM introduces tools for visualization of missing and imputed values.
+library (naniar) #tidy ways to summarise, visualize, and manipulate misisng data.
 ```
 
-You can see that the columns in this file have been given the names `X1` and `X2`.
+We can check the amount of missing data in all data.frames:
 
-This file looks a bit harder to tidy. What are the variables in this data set and what are the observations?
+```{r}
+skimr::skim(ineqdata)
+```
+
+Interpretation:
+There are -- columns. A first glance there are -- character variables and -- numeric variables. There are -- variables with not missing value, there are -- variables with --% missing values (x and y), and one columns with --% missing values (z).
 
 
-## Step 3. Visualising data (**ggplot2**)
 
+
+
+
+```{r}
+# Are there missing values in the dataset?
+any_na(ineqdata)
+
+# How many?
+n_miss(ineqdata)
+prop_miss(ineqdata)
+```
+
+You have three options dealing with NA: 
+1) imputation (not time and quite complex)
+2) Apply a complete case strategy (excluding NAs) or 
+3) Elliminate variables or observations with NAs with risk to biased your results (reducing statistical power)
+
+#elliminate NA in the dataset
+```{r}
+#is.na() function first looks for na values in a column and then discards such rows.
+
+#antropometric measures
+data1$wc[is.na(data1$wc)] <- mean(data1$wc, na.rm=TRUE)
+data1$height[is.na(data1$height)] <- mean(data1$height, na.rm=TRUE)
+data1$weight[is.na(data1$weight)] <- mean(data1$weight, na.rm=TRUE)
+
+data3    <- na.omit(data2) #this dataset includes complete case (removed occupation n=347 and incomplete markers) 
+data4    <- na.omit(data1) #This dataset includes complete case (removind all NA and leaving occupation)
+View(data4)
+```
+
+
+
+## Step 3. Visualising data**
+
+Load libraries to produce nice graphs
 ```{r}
 library(ggplot2)             #Descriptive stats and data viz
 library(ggstatsplot)         #Basi stats and inference stats plots
 ```
-
 
 Having loaded some numerical data, a sensible first step is to visualise the distributions of variables to check for any issues.
 
@@ -234,32 +219,32 @@ Although there are many useful plotting functions available in base R, in this s
 
 ## Histogram
 
-Let's start with a histogram for the GDP data from the `trig` tibble:
+Let's start with a histogram for the GDP data from the `totchol` tibble:
 
 ```{r}
-hist(ineq$ldl)
+hist(ineqdata$totchol)
 ```
 
 
-
-
-
-
-
-```{r}
-a <- ggplot(gdp97, aes(x=gdp))
-hist <- a + geom_histogram(bins=100)
-hist
-```
-
-
-Histograms markers
+Histograms of biomarkers
 ```{r echo=TRUE}
 
 gghistostats(
-  data       = ineq,
-  x          = ldl,
-  title      = "Histogram LDL",
+  data       = ineqdata,
+  x          = age,
+  title      = "Histogram glucose",
+  test.value = 12,
+  binwidth   = 6
+)
+```
+
+
+```{r echo=TRUE}
+
+gghistostats(
+  data       = ineqdata,
+  x          = totchol,
+  title      = "Histogram glucose",
   test.value = 12,
   binwidth   = 6
 )
@@ -269,8 +254,8 @@ gghistostats(
 
 Notice that there are two steps to creating the plot. 
 
-The first line constructs the data space by specifying the dataset (`ineq`) and the variable(s) of interest 
-(in this case, just `education and ldl`). This function controls the *aesthetic mappings* used by `ggplot2`, i.e. the way in which the data will be mapped to visual elements. 
+The first line constructs the data space by specifying the dataset (`ineqdata`) and the variable(s) of interest 
+(in this case, just `education and BMI`). This function controls the *aesthetic mappings* used by `ggplot2`, i.e. the way in which the data will be mapped to visual elements. 
 
 
 The `ggplot2` defaults for axes, labels etc. are usually informative enough for data exploration, but of course everything can be modified if necessary.
@@ -281,10 +266,35 @@ For example, to add at title, change the histogram colour and show population on
 set.seed(123)
 
 ggbetweenstats(
-  data  = ineq,
-  x     = education,
-  y     = ldl, fill = education,
-  title = "Distribution of LDL across education groups"
+  data  = ineqdata,
+  x     = gender,
+  y     = bmi, fill = gender,
+  title = "Distribution of body mass index across sex groups"
+)
+```
+
+Find distribution of people with alcohol consumption by body mas index
+```{r}
+set.seed(123)
+
+ggbetweenstats(
+  data  = ineqdata,
+  x     = alcohol,
+  y     = bmi, fill = alcohol,
+  title = "Distribution of body mass index across sex groups"
+)
+```
+
+
+Find distribution of people exposed to extreme changes weather by glucose
+```{r}
+set.seed(123)
+
+ggbetweenstats(
+  data  = ineqdata,
+  x     = extreme_weather,
+  y     = bmi, fill = extreme_weather,
+  title = "Distribution of body mass index across sex groups"
 )
 ```
 
@@ -316,14 +326,13 @@ ggplot(ineq, aes(x=ldl, y=totchol)) +
 The [ggplot2 cheat sheet](https://github.com/rstudio/cheatsheets/raw/master/data-visualization-2.1.pdf) gives much more information about plotting options.
 
 
-Step 4: exploring and manipulating data
+Step 4: Exploring and manipulating data using table functions
 
-# Manipulating data (**dplyr**)
+#Manipulating data (**dplyr**)
 
 The [dplyr]() package deals with many types of data manipulation that are needed as part of any analysis workflow. 
 
-# Check distribution and frequency of data
-
+Load libraries
 ```{r}
 library(table1)     #to Create HTML Tables of Descriptive Statistics in epi
 library(gtsummary)
@@ -332,11 +341,17 @@ install.packages("DescTools")
 library(DescTools)  #single and cumulative frequencies values are reported.
 ```
 
+# Check distribution and frequency of data
+
+By setting `na.rm=TRUE`, we discard the cells that did not contain observations.
 
 ```{r}
-Desc(ineq$gender)
-Freq(ineq$gender, useNAs=always)  
+Freq(data1$height, useNA = "always")
+
+Desc(ineqdata$gender)
+Freq(ineqdata$gender, useNAs=always)  
 ```
+
 
 #Check using tables functions
 
@@ -344,9 +359,17 @@ Freq(ineq$gender, useNAs=always)
 table(ineq$gender)
 ```
 
+Using Table 1 (very helpful to produce tables with %, CI, counts, p values)
+
+```{r}
+table_test <- table1(~ethnic_group | sex, data=biomarkers)
+
+table_test
+```
 
 #Use table functions more advanced, for instance compareGroups
 
+Load packages
 ```{r}
 install.packages("compareGroups")
 library(compareGroups)
@@ -365,114 +388,56 @@ table_test_ci
 ```
 
 
-
-## mutate()
-
-It might be more useful to compare countries' GDP on a per-capita basis. We need to make a new variable to show per-capita GDP. 
-To do this, we will use the `mutate()` function, which adds new columns to the tibble:
-
+Save bew dataset
 ```{r}
-
-gdp97 <- mutate(gdp97, gdp_pp=gdp/pop)
-gdp97
-
+export2word( x = ineq2, file = '/Users/macbookpro/Documents/PhD Project/Data/SABE/Outputs/ineq2.docx')
 ```
 
-Note that like all dplyr functions (and despite its name), the `mutate()` function does not actually change the original tibble used as input, so we still need to capture the output using `<-`.
+## Changing data type
 
-
-#### Exercise {-}
-
-Visualise the distribution of the new variable `gdp_pp`.
-
-```{r}
-
-
-
-```
-
-
-## Selecting and filtering data
-
-
-### filter()
-
-With tidy data, it is easy to filter cases according to whatever conditions we specify, e.g.:
-
+as factor
+as numeric
+as integers
 
 ```{r}
-
-filter(gdp97, gdp_pp > 30000, pop < 1000000)
-
-```
-
-
-### select()
-
-We can extract a subset of variables using select(), e.g.:
-
-```{r}
-
-select(gdp97, c(geo,gdp_pp))
-
-```
-
-
-### pull()
-
-If you just want the values from a single column, use `pull()` to extract them as a vector:
-
-```{r}
-
-pull(gdp97, geo)
-
+#Rename values in the health outcomes columns and create a vectors of diseases
+biomarkers.imp$cvd <- factor(biomarkers.imp$cvd,
+                levels = c("1","2","8","9"),
+                labels = c("1","0", "0","0"))
+                
+biomarkers.imp$hta <- factor(biomarkers.imp$hta,
+                levels = c("1","2","8","9"),
+                labels = c("1","0", "0","0"))
+                
+biomarkers.imp$diabetes <- factor(biomarkers.imp$diabetes,
+                levels = c("1","2","8","9"),
+                labels = c("1","0", "0","0"))
+                
 ```
 
 
 
-### arrange()
+#### Exercise
 
-Use `arrange()` to sort a tibble by ascending column value:
-
-```{r}
-
-arrange(gdp97, pop)
-
-```
-
-
-...or by descending value using `desc()`:
-
-```{r}
-
-arrange(gdp97, desc(pop))
-
-```
-
-
-The [dplyr cheat sheet](https://github.com/rstudio/cheatsheets/blob/master/data-transformation.pdf) gives useful summaries of these and other functions for data manipulation.
-
-
-#### Exercise {-}
-
-Use manipulations of the `countries` tibble to complete the following tasks:
-
-
-1. Find the Asian countries that are south of the equator.
+Visualise the distribution of the new variable `Age`.
 
 ```{r}
 
 
+
 ```
 
-2. Find the first five African countries to join the UN.
+Find the mestizo population in the data, then identify females with diabetes
 
 ```{r}
 
 
+
 ```
 
-3. Make a vector of OECD country names, sorted from East to West.
+### Exploring structure of data
+
+We can look and extract information about charcateristics of data using str() and skim ()
 
 ```{r}
 
@@ -480,10 +445,9 @@ Use manipulations of the `countries` tibble to complete the following tasks:
 ```
 
 
-#### Exercise {-}
+### Table1 ()
 
-Starting with the `co2` tibble, plot the annual emissions of a country of your choice.
-*Hint*: use the `geom_line()` geom.
+Use `table1()` to generate a table with socioeconomic charcateristics of population filtered by gender
 
 ```{r}
 
@@ -492,65 +456,31 @@ Starting with the `co2` tibble, plot the annual emissions of a country of your c
 ```
 
 
+## gghistostats ()
 
-## Joining tables
+Use gghistostats () function to look at the distibution of BMI and age of participants plotting a histogram.
 
-To compare emissions between countries in a fair way, it would make sense to convert them to a per-capita basis. 
-Let's start with the figures for 1997 to see how this can be done.
-
-First we will make a new tibble containing only the 1997 emissions:
-
-```{r}
-
-co2_1997 <- filter(co2, year==1997)
-co2_1997
-
-```
-
-However, the population data is not yet in the co2 tibble, so we will need to look it up from another tibble by matching the country name. 
-This type of **relational data**, where information must be collected from multiple tables, requires careful handling to make sure that rows in different tables are correctly associated with each other. The country name acts as a **key** to unlock the correct data from the associated table.
-
-The relevant population data is in the stats97 table: 
-
-```{r}
-stats97
-```
-
-This is indexed by the `geo` code for each country.
-
-Taking the `co2_1997` data, we apply a `left_join()` to relate its `geo` variable to the `geo` variable in `stats97`:
-
-```{r}
-
-co2_1997 <- left_join(co2_1997, stats97[,c("geo","pop")], by="geo")
-co2_1997
-
-```
-
-For every row in the original table, `left_join()` tries to match its `country` with a `name` in `stats97`. Notice that we have specified only the columns that we need from `stats97`.
-
-The resulting table imports the additional column `pop` from the `stats97` tibble, so now we can associate each country and year with the correct CO2 emissions and population.
-
-`left_join()` is just one of several `dplyr` functions for working with relational data.
-You can read more about relational data in the [R for Data Science](https://r4ds.had.co.nz/relational-data.html) online textbook.
-
-
-
-#### Exercise {-}
-
-Calculate the per-capita emissions for 1997 as a new column in `co2_1997` and plot these on a histogram.
 
 ```{r}
 
 
 ```
 
-Which country emitted the most CO2 per capita in 1997? Which emitted the least?
+## ggbetweenstats ()
+
+Find the mean of adult SEP separately females and males using a violing plot
 
 ```{r}
 
 
+```
+
+rebame levels of diabetes : healthy unhealty
+
+```{r}
+
 
 ```
 
----
+###FIN###
+
