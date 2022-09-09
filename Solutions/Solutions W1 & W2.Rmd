@@ -1,0 +1,113 @@
+---
+title: "Solutions W1 & W2"
+author: "Juan Rivillas"
+date: "09/09/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+#### This R Markdown contains potential soluctions (there are manyof them you may apply) to the exercise of the Weeks 1 and 2: Exploratory data analsysis and correlations. 
+
+Note: This exercise is for your training and it has not grade.
+
+Visualise the distribution of the new variable `Age`.
+
+```{r}
+gghistostats(
+  data       = ineqdata,
+  x          = age,
+  title      = "Histogram with distribution and mean Age of population",
+  test.value = 12,
+  binwidth   = 6
+)
+
+```
+
+Find the mestizo population in the data, then identify females with diabetes
+
+```{r}
+
+table_gender <- table1(~ ethnic_group + diabetes | gender, data=ineqdata)
+table_gender 
+```
+
+### Exploring structure of data
+
+We can look and extract information about characteristics of data using str() and skim ()
+
+```{r}
+str(ineqdata)
+skim (ineqdata)
+```
+
+
+### Table1 ()
+
+Use `table1()` to generate a table with socioeconomic characteristics of population filtered by gender
+
+```{r}
+
+table_sep <- table1(~ education + childhood_poverty + malnutrition + migration + extreme_weather + inequality + political_party | gender, data=ineqdata)
+table_sep
+
+```
+
+If you want to save this table in your machine you may used code as follows:
+
+```{r}
+export2word( x = ineq2, file = '/Users/macbookpro/Documents/PhD Project/Data/SABE/Outputs/ineq2.docx')
+#change path file according your working directory in your machine
+```
+
+
+## gghistostats ()
+
+Use gghistostats () function to look at the distribution of HD (homeostatic Dysregulation) and gender of participants plotting a histogram.
+
+
+```{r}
+ggbetweenstats(
+  data  = ineqdata,
+  x     = gender,
+  y     = hd, fill = gender,
+  title = "Distribution of HD (homeostatic Dysregulation) and gender of participants"
+)
+
+```
+
+## ggbetweenstats ()
+
+Find the mean of adult SEP (inequality) separately females and males using a violing plot
+
+```{r}
+
+ggbetweenstats(
+  data  = ineqdata,
+  x     = gender,
+  y     = inequality, fill = gender,
+  title = "Distribution and mean adult inequality separately females and males"
+)
+
+```
+
+Rename levels of diabetes : healthy unhealthy
+
+```{r}
+#Rename values in the health outcomes columns and create a vectors of diseases
+
+ineqdata$diabetes<- factor(ineqdata$diabetes,
+                levels = c("yes","no"),
+                labels = c("unhealthy","healthy"))
+```
+
+
+```{r}
+Desc(ineqdata$diabetes)
+Freq(ineqdata$diabetes)  
+```
+
+
+```
+
+###FIN###
