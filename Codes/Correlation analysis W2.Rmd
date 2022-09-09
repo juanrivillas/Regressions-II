@@ -1,0 +1,124 @@
+---
+title: "Correlation analysis W2"
+author: "Juan Rivillas"
+date: "09/09/2022"
+output: html_document
+---
+
+Today's session will focus on data taken from the [Nutrition and Aging survey] project.
+
+Two main steps are described in this markdown. 
+
+To test correlations among markers and CA (using correlation package)
+3.	To test associations BA with chronological age (using plot_ba function with age vs bioage vars)
+4.	To test correlations BA with one another (using plot_baa function with BAA corplot)
+
+**Step 1. Import dataset and prepare work space**. This step includes:
+        Tidying data (This is OK).
+        Importing data base.
+        Verifying upload and exploring data base.
+        load packages
+
+**Step 2: Perform correlations test between variables of interest **
+        Correlation between two variables
+        How to use correlation matrix
+        How to use plot to test correlations
+        How to use tables to report correlations
+         
+
+**Step 1. Import dataset and prepare work space**
+load data on chronic diseases in adults
+```{r}
+#load you data from file window in the bottom righ 
+View(corr_data)
+```
+
+#Check structure dataset
+```{r}
+str(corr_data)
+```
+       
+Load required packages
+```{r}
+install.packages("corrplot")
+install.packages("ggcorrplot")
+
+library(corrplot)
+library(ggcorrplot)
+library(ggstatsplot)
+library(compareGroups)
+
+```       
+
+
+**Step 2: Perform correlations test between variables of interest **
+
+#Correlation between two variables
+
+The correlation between 2 variables is found with the cor() function.
+
+Suppose we want to compute the correlation between obesity and metabolism.
+
+```{r}
+# Pearson correlation between 2 variables
+cor(corr_data$obesity, corr_data$metabolism)
+```
+
+
+#How to Create a Correlation Matrix in R
+
+A correlation matrix is a square table that shows the correlation coefficients between variables in a dataset.
+
+It offers a quick way to understand the strength of the linear relationships that exist between variables in a dataset.
+
+We can use the ggcorrplot() function from the ggcorrplot package in R to visualize the correlation matrix:
+
+Getting simple matrix of correlation coefficients
+```{r}
+#visualize correlation matrix
+ggcorrplot(cor(corr_data))
+```
+
+The color of the squares in the correlation matrix help us visualization the correlations between each variable.
+
+Other viz option: We can use the corrplot() function from the corrplot package in R to visual the correlation matrix:
+```{r}
+#visualize correlation matrix
+test <- corrplot(cor(corr_data))
+```
+
+The color and size of the circles in the correlation matrix help us visualization the correlations between each variable.
+
+For example, the circle where the assists and rebounds variables intersect is small and light red, which tells us that the correlation is low and negative.
+
+
+#Correlation test
+Interpretation: if this value is close to 0, it means that there is no relationship between the variables. When the value is positive (blue color), it means that as one variable gets larger the other gets larger. And, if they are negative it means that as one gets larger, the other gets smaller (often called an “inverse” correlation).(Red color).
+
+
+#How to use plot to test correlations
+
+```{r}
+## plot with statistical results
+test1 <- ggscatterstats(
+  data = corr_data,
+  x = metabolism,
+  y = obesity,
+  bf.message = FALSE
+)
+
+test1
+```
+
+
+#Use tables: you also may use using function compareGroups ()
+
+Generate a table with number, % and p values of malnutrition, gender and socioeconomic characteristics
+```{r}
+table_test <- compareGroups( data = ineqdata, 
+               formula = malnutrition ~ gender + education + childhood_poverty + household_violence + extreme_weather + migration + health_insurance + inequality + smoking + alcohol + diabetes + hta + cvd + obesity )
+
+table_test_ci <- createTable(x = table_test, show.ci = T, show.n = T, show.all = T )
+table_test_ci
+```
+######END CODE#######

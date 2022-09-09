@@ -61,6 +61,9 @@ When the cursor is inside a chunk, you can execute the code using *Ctrl-Shift-En
 A notebook is a living document. You are encouraged to make use of this notebook to try out the example code, alter it, complete the exercises and add your own notes and code chunks. You can insert a new code chunk using the shortcut _Ctrl+Alt+I_.
 
 R code is included as *chunks*, which look like this:
+```{r}
+
+```
 
 ```{r}
 ## R code lives here
@@ -75,11 +78,7 @@ print("Hello RStudio!")
 ```{r}
 ## Working directory
 getwd()
-
 setwd("/Users/macbookpro/Documents/U Groningen/")
-
-setwd("~/Documents/U Groningen/Regressions II")
-
 print(getwd())
 ```
 ```
@@ -106,6 +105,10 @@ The tidyverse packages and R Markdown are installed with:
 ```{r}
 install.packages ("tidyverse")
 install.packages("rmarkdown")
+install.packages("devtools")
+install.packages("dplyr")
+install.packages("usethis")
+install.packages("DescTools")
 ```
 
 R Markdown provides an authoring framework for data science. You can use a single R Markdown file to both
@@ -117,8 +120,12 @@ R Markdown provides an authoring framework for data science. You can use a singl
 and loaded into the workspace with:
 
 ```{r eval=FALSE}
-library(tidyverse)
-library(rmarkdown)
+library(tidyverse) #Manipulate data
+library(rmarkdown) #Reports
+library(devtools) #Frequency tables
+library(dplyr)
+library(usethis)
+library(DescTools)
 ```
 
 Note that this command loads all of the core tidyverse packages, but you can also load them individually as necessary.
@@ -128,6 +135,7 @@ Note that this command loads all of the core tidyverse packages, but you can als
 ```{r}
 library(readxl)
 ineqdata <- read_excel("~/Documents/U Groningen/Regressions II/Datasets/ineqdata.xlsx")
+
 View(ineqdata)
 ```
 
@@ -152,7 +160,7 @@ tail(ineqdata)
 dim(ineqdata)
 ```
 
-£Checking missing values in the dataset
+#Checking missing values in the dataset
 
 #Loading packages to work with missing values
 #Load packages for descriptive analysis of missingness
@@ -180,11 +188,11 @@ There are -- columns. A first glance there are -- character variables and -- num
 
 ```{r}
 # Are there missing values in the dataset?
-any_na(ineqdata)
+any_na(data4)
 
 # How many?
-n_miss(ineqdata)
-prop_miss(ineqdata)
+n_miss(data4)
+prop_miss(data4)
 ```
 
 You have three options dealing with NA: 
@@ -196,15 +204,9 @@ You have three options dealing with NA:
 ```{r}
 #is.na() function first looks for na values in a column and then discards such rows.
 
-#For continuos variables
-ineqdata$education[is.na(ineqdata$education)] <- mean(ineqdata$education, na.rm=TRUE)
+data4    <- na.omit(ineqdata) #This dataset includes complete case (removind all NA and leaving occupation)
 
-#For all variables to remove NAs values in vars.
-ineqdata1    <- na.omit(ineqdata) #this dataset includes complete case (removed education n=13 and one observation with incomplete in the var "physical activity") 
-data4    <- na.omit(data1) #This dataset includes complete case (removind all NA and leaving occupation)
-
-View(ineqdata1)
-skimr::skim(ineqdata1)
+skimr::skim(data4)
 
 ```
 
@@ -213,6 +215,8 @@ skimr::skim(ineqdata1)
 
 Load libraries to produce nice graphs
 ```{r}
+install.packages("ggstatsplot")
+
 library(ggplot2)             #Descriptive stats and data viz
 library(ggstatsplot)         #Basic stats and inference stats plots
 ```
@@ -227,7 +231,7 @@ Although there are many useful plotting functions available in base R, in this s
 Let's start with a histogram for the GDP data from the `totchol` tibble:
 
 ```{r}
-hist(ineqdata$age)
+hist(data4$age)
 ```
 
 ```{r}
@@ -236,7 +240,6 @@ hist(ineqdata$bmi)
 
 Histograms of biomarkers
 ```{}
-
 gghistostats(
   data       = ineqdata,
   x          = age,
@@ -273,10 +276,10 @@ For example, to add at title, change the histogram colour and show population on
 ```{r}
 
 ggbetweenstats(
-  data  = ineqdata,
+  data  = data4,
   x     = gender,
   y     = bmi, fill = gender,
-  title = "Distribution of body mass index across sex groups"
+  title = "testing differences bewen males and females"
 )
 ```
 
@@ -288,20 +291,10 @@ ggbetweenstats(
   data  = ineqdata,
   x     = alcohol,
   y     = bmi, fill = alcohol,
-  title = "Distribution of body mass index across sex groups"
+  title = "Distribution of body mass index across alcohol consumption groups"
 )
 ```
 
-
-Find distribution of people exposed to extreme changes weather by glucose
-```{r}
-ggbetweenstats(
-  data  = ineqdata,
-  x     = extreme_weather,
-  y     = bmi, fill = extreme_weather,
-  title = "Distribution of body mass index across sex groups"
-)
-```
 
 ## Saving plots to file
 
@@ -335,14 +328,6 @@ ggplot(ineqdata, aes(x=glucose, y=age)) +
 
 ```
 
-
-```{r}
-ggplot(ineqdata, aes(x=bmi, y=biological_age)) + 
-  geom_point() + 
-  scale_x_log10() + 
-  scale_y_log10() 
-
-```
 
 The [ggplot2 cheat sheet](https://github.com/rstudio/cheatsheets/raw/master/data-visualization-2.1.pdf) gives much more information about plotting options.
 
@@ -396,16 +381,18 @@ install.packages("compareGroups")
 library(compareGroups)
 ```
 
-
+Generate a table with number, percentajes and p values of malnutrition, gender and socioeconomic characteristics
 ```{r}
-table_test <- compareGroups( data = ineq, 
-               formula = diabetes ~ gender + malnutrition + education)
+table_test <- compareGroups( data = ineqdata, 
+               formula = malnutrition ~ gender + education + childhood_poverty)
 
 table_test_ci <- createTable(x = table_test, show.ci = T, show.n = T, show.all = T )
 
 export2word( x = table_test_ci, file = '/Users/macbookpro/Documents/U Groningen/Regressions II/table_test_ci.docx')
 
 table_test_ci
+
+#Note: do not foget to assign your path file and save suitably generated tables in your machine.
 ```
 
 
@@ -414,25 +401,13 @@ Save bew dataset
 export2word( x = ineq2, file = '/Users/macbookpro/Documents/PhD Project/Data/SABE/Outputs/ineq2.docx')
 ```
 
-## Changing data type
-
-as factor
-as numeric
-as integers
 
 ```{r}
 #Rename values in the health outcomes columns and create a vectors of diseases
 biomarkers.imp$cvd <- factor(biomarkers.imp$cvd,
                 levels = c("1","2","8","9"),
                 labels = c("1","0", "0","0"))
-                
-biomarkers.imp$hta <- factor(biomarkers.imp$hta,
-                levels = c("1","2","8","9"),
-                labels = c("1","0", "0","0"))
-                
-biomarkers.imp$diabetes <- factor(biomarkers.imp$diabetes,
-                levels = c("1","2","8","9"),
-                labels = c("1","0", "0","0"))
+            
                 
 ```
 
@@ -458,7 +433,7 @@ Find the mestizo population in the data, then identify females with diabetes
 
 ### Exploring structure of data
 
-We can look and extract information about charcateristics of data using str() and skim ()
+We can look and extract information about characteristics of data using str() and skim ()
 
 ```{r}
 
@@ -468,7 +443,7 @@ We can look and extract information about charcateristics of data using str() an
 
 ### Table1 ()
 
-Use `table1()` to generate a table with socioeconomic charcateristics of population filtered by gender
+Use `table1()` to generate a table with socioeconomic characteristics of population filtered by gender
 
 ```{r}
 
@@ -479,7 +454,7 @@ Use `table1()` to generate a table with socioeconomic charcateristics of populat
 
 ## gghistostats ()
 
-Use gghistostats () function to look at the distibution of BMI and age of participants plotting a histogram.
+Use gghistostats () function to look at the distribution of HD (homeostatic Dysregulation) and gender of participants plotting a histogram.
 
 
 ```{r}
@@ -489,7 +464,7 @@ Use gghistostats () function to look at the distibution of BMI and age of partic
 
 ## ggbetweenstats ()
 
-Find the mean of adult SEP separately females and males using a violing plot
+Find the mean of adult SEP (inequality) separately females and males using a violing plot
 
 ```{r}
 
