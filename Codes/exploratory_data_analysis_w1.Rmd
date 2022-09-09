@@ -43,7 +43,6 @@ This workshop assumes a basic familiarity with the R language, otherwise it is h
 
 
 ![](rconsole.png)
-
 - Bottom left: console window (type commands here and see the output directly)
 - Top left: editor window (for editing R notebooks and scripts)
 - Top right: workspace / history window (examine the current workspace, import datasets, see commands entered previously)
@@ -57,6 +56,10 @@ When you open the notebook's source code (*.Rmd* file) in RStudio, you can view 
 
 Text is formatted using the [R markdown](https://rmarkdown.rstudio.com/) notation, which is derived from [Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet). This is a simple way to apply styling to text and indicate the structure of your document.
 
+When the cursor is inside a chunk, you can execute the code using *Ctrl-Shift-Enter*. The commands and output appear in the console window as if the chunk had been copy-pasted there. The output also appears in the notebook just after the chunk.
+
+A notebook is a living document. You are encouraged to make use of this notebook to try out the example code, alter it, complete the exercises and add your own notes and code chunks. You can insert a new code chunk using the shortcut _Ctrl+Alt+I_.
+
 R code is included as *chunks*, which look like this:
 
 ```{r}
@@ -64,14 +67,11 @@ R code is included as *chunks*, which look like this:
 print("Hello RStudio!")
 ```
 
-When the cursor is inside a chunk, you can execute the code using *Ctrl-Shift-Enter*. The commands and output appear in the console window as if the chunk had been copy-pasted there. The output also appears in the notebook just after the chunk.
-
-A notebook is a living document. You are encouraged to make use of this notebook to try out the example code, alter it, complete the exercises and add your own notes and code chunks. You can insert a new code chunk using the shortcut _Ctrl+Alt+I_.
-
 
 **Step 1. Preparing work space (import dataset)**
 
 #Before you start work, please check your working directory and assign file pathway to save automatically plots and outcomes in pdf format.
+
 ```{r}
 ## Working directory
 getwd()
@@ -87,7 +87,6 @@ print(getwd())
 You can change the working directory using the files window in RStudio (bottom right).
 Navigate to the directory containing the workshop data and click the cog icon for the "Set as Working Directory" option.
 
-
 ##loading of packages required for the tidying data
 
 Tidy data has the three following attributes:
@@ -102,20 +101,30 @@ About packages: Many useful R functions are developed by individuals and researc
 
 You can find a full list of R packages at the [CRAN](https://cran.r-project.org/) page.
 
-The tidyverse packages are installed with:
-```{}
-install.packages("tidyverse")
+The tidyverse packages and R Markdown are installed with:
+
+```{r}
+install.packages ("tidyverse")
+install.packages("rmarkdown")
 ```
+
+R Markdown provides an authoring framework for data science. You can use a single R Markdown file to both
+
+-save and execute code
+-generate high quality reports that can be shared with an audience
+
 
 and loaded into the workspace with:
 
 ```{r eval=FALSE}
 library(tidyverse)
+library(rmarkdown)
 ```
 
 Note that this command loads all of the core tidyverse packages, but you can also load them individually as necessary.
 
-load you data and check your data was loaded
+#load you data and check your data was loaded
+
 ```{r}
 library(readxl)
 ineqdata <- read_excel("~/Documents/U Groningen/Regressions II/Datasets/ineqdata.xlsx")
@@ -123,7 +132,7 @@ View(ineqdata)
 ```
 
 
-Other option to check loaded data:
+Other option to check loaded data (just call dataset by assigned name):
 
 ```{}
 ineqdata
@@ -138,12 +147,12 @@ str(ineqdata)
 Check first and last observations in the dataset
 
 ```{r eval=FALSE, include=FALSE}
-head(ineq)
-tail(ineq)
-dim(SABE_Colombia)
+head(ineqdata)
+tail(ineqdata)
+dim(ineqdata)
 ```
 
-Checking missing values in the dataset
+£Checking missing values in the dataset
 
 #Loading packages to work with missing values
 #Load packages for descriptive analysis of missingness
@@ -169,10 +178,6 @@ Interpretation:
 There are -- columns. A first glance there are -- character variables and -- numeric variables. There are -- variables with not missing value, there are -- variables with --% missing values (x and y), and one columns with --% missing values (z).
 
 
-
-
-
-
 ```{r}
 # Are there missing values in the dataset?
 any_na(ineqdata)
@@ -191,16 +196,17 @@ You have three options dealing with NA:
 ```{r}
 #is.na() function first looks for na values in a column and then discards such rows.
 
-#antropometric measures
-data1$wc[is.na(data1$wc)] <- mean(data1$wc, na.rm=TRUE)
-data1$height[is.na(data1$height)] <- mean(data1$height, na.rm=TRUE)
-data1$weight[is.na(data1$weight)] <- mean(data1$weight, na.rm=TRUE)
+#For continuos variables
+ineqdata$education[is.na(ineqdata$education)] <- mean(ineqdata$education, na.rm=TRUE)
 
-data3    <- na.omit(data2) #this dataset includes complete case (removed occupation n=347 and incomplete markers) 
+#For all variables to remove NAs values in vars.
+ineqdata1    <- na.omit(ineqdata) #this dataset includes complete case (removed education n=13 and one observation with incomplete in the var "physical activity") 
 data4    <- na.omit(data1) #This dataset includes complete case (removind all NA and leaving occupation)
-View(data4)
-```
 
+View(ineqdata1)
+skimr::skim(ineqdata1)
+
+```
 
 
 ## Step 3. Visualising data**
@@ -208,7 +214,7 @@ View(data4)
 Load libraries to produce nice graphs
 ```{r}
 library(ggplot2)             #Descriptive stats and data viz
-library(ggstatsplot)         #Basi stats and inference stats plots
+library(ggstatsplot)         #Basic stats and inference stats plots
 ```
 
 Having loaded some numerical data, a sensible first step is to visualise the distributions of variables to check for any issues.
@@ -216,23 +222,25 @@ Having loaded some numerical data, a sensible first step is to visualise the dis
 Although there are many useful plotting functions available in base R, in this session we will focus on making plots using the tidyverse package `ggplot2`. This is a very powerful set of functions that support a consistent approach to data visualisation. `ggplot2` makes it much easier to create high-quality graphics for presentations and publications.
 
 
-
 ## Histogram
 
 Let's start with a histogram for the GDP data from the `totchol` tibble:
 
 ```{r}
-hist(ineqdata$totchol)
+hist(ineqdata$age)
 ```
 
+```{r}
+hist(ineqdata$bmi)
+```
 
 Histograms of biomarkers
-```{r echo=TRUE}
+```{}
 
 gghistostats(
   data       = ineqdata,
   x          = age,
-  title      = "Histogram glucose",
+  title      = "Histogram of age of individual in sample data",
   test.value = 12,
   binwidth   = 6
 )
@@ -263,7 +271,6 @@ The `ggplot2` defaults for axes, labels etc. are usually informative enough for 
 For example, to add at title, change the histogram colour and show population on a log scale:
 
 ```{r}
-set.seed(123)
 
 ggbetweenstats(
   data  = ineqdata,
@@ -288,8 +295,6 @@ ggbetweenstats(
 
 Find distribution of people exposed to extreme changes weather by glucose
 ```{r}
-set.seed(123)
-
 ggbetweenstats(
   data  = ineqdata,
   x     = extreme_weather,
@@ -308,20 +313,36 @@ ggsave("my_histogram.pdf")
 The file type is determined by the file extension and the size of the image can be changed using `width` and `height` options.
 
 
-
 ## Scatter plot
 
 We can visualise covariation between variables using a scatter plot, for example GDP vs population. This uses `geom_point()`:
 
 ```{r}
 
-ggplot(ineq, aes(x=ldl, y=totchol)) + 
+ggplot(ineqdata, aes(x=bmi, y=totchol)) + 
   geom_point() + 
   scale_x_log10() + 
   scale_y_log10() 
 
 ```
 
+
+```{r}
+ggplot(ineqdata, aes(x=glucose, y=age)) + 
+  geom_point() + 
+  scale_x_log10() + 
+  scale_y_log10() 
+
+```
+
+
+```{r}
+ggplot(ineqdata, aes(x=bmi, y=biological_age)) + 
+  geom_point() + 
+  scale_x_log10() + 
+  scale_y_log10() 
+
+```
 
 The [ggplot2 cheat sheet](https://github.com/rstudio/cheatsheets/raw/master/data-visualization-2.1.pdf) gives much more information about plotting options.
 
@@ -346,7 +367,7 @@ library(DescTools)  #single and cumulative frequencies values are reported.
 By setting `na.rm=TRUE`, we discard the cells that did not contain observations.
 
 ```{r}
-Freq(data1$height, useNA = "always")
+Freq(ineqdata$bmi, useNA = "always")
 
 Desc(ineqdata$gender)
 Freq(ineqdata$gender, useNAs=always)  
@@ -356,13 +377,13 @@ Freq(ineqdata$gender, useNAs=always)
 #Check using tables functions
 
 ```{r}
-table(ineq$gender)
+table(ineqdata$gender)
 ```
 
 Using Table 1 (very helpful to produce tables with %, CI, counts, p values)
 
 ```{r}
-table_test <- table1(~ethnic_group | sex, data=biomarkers)
+table_test <- table1(~education | gender, data=ineqdata)
 
 table_test
 ```
