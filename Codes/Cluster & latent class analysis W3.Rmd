@@ -1,0 +1,272 @@
+---
+title: "Cluster analysis and Latent Class AnalsysW3"
+author: "Juan Rivillas"
+date: "10/09/2022"
+output: html_document
+---
+
+This session will focus on data taken from the [Nutrition and Aging survey] project: "dfaces" in Git Hub: https://github.com/juanrivillas/Regressions-II/tree/main/Datasets 
+
+Three main steps are described in this Code. 
+**Step 1: Prepare work space and data preparation: importing data, checkking stratcutura ans NAs**
+**Step 1: Clustering analysis with cluster package**
+**Step 3: Latent Class Analysis (LCA) with poLCA package**
+
+Six variables: neglected food, household violence, emotional abuse, early-life infection, and poor health reported at 15 years old. 
+
+Aims of the code:
+•	Model comparison: identify the best fit model and classification of individuals.
+•	Clustering analysis.
+•	Identify Latent Profiles of ACEs.
+•	Investigate differences that arise from the use of different approaches.
+•	To examine several diagnostic criteria to select a final model.
+•	To capture the best clustering or class.
+
+
+**Step 1: Prepare work space and data preparation**
+#Data Preparation
+To perform a cluster analysis in R, generally, the data should be prepared as follows:
+
+Rows are observations (individuals) and columns are variables
+Any missing value in the data must be removed or estimated.
+The data must be standardized (i.e., scaled) to make variables comparable. Recall that, standardization consists of transforming the variables such that they have mean zero and standard deviation one.
+
+
+#Importing of dataset
+Load and verifying your dataset
+```{r}
+#Use bottom right window searching files in your machine
+```
+
+check structure and NA values in dataset
+```{r}
+str(dfaces)
+skimr::skim(dfaces)
+```
+
+Load the following packages:
+```{r}
+install.packages("cluster")   ## clustering algorithms
+install.packages("factoextra")## clustering algorithms & visualization
+install.packages("Matrix")    ## Matrix: Sparse and Dense Matrix 
+install.packages("table1")    ## Generate nice table 
+
+library(cluster)    
+library(factoextra) 
+library(table1)
+
+```
+
+
+**Step 2. Cluster Analysis in R**
+
+Here, we'll learn four selected approaches:
+
+• k-means clustering (Optimal number of clusters)
+• Compute gap statistic method
+• Clustering Validation: Average Silhouette Method
+• Principal Component Analysis (PCA)
+
+#k-means clustering (number of class is fixed using a supervised technique).
+
+#Optimal number of clusters
+
+Elbow method: looks at the total within-cluster sum of square (WSS) as a function of the number of clusters. The outcome as follows:
+
+```{r}
+fviz_nbclust(dfaces, kmeans, method = "wss")
+```
+Interpretation: So in this data ideal number of clusters should be 2, 3, or even 4.
+Please note that where line starts breaking down gives us an idea of potential groups.
+
+# Compute gap statistic method
+
+This method allows to compare the total intra-cluster variation for different values of k with their expected values under null reference distribution of the data (This step takes 1 min processing)
+
+```{r}
+gap_stat <- clusGap(dfaces, FUN = kmeans, nstart = 25,
+                    K.max = 10, B = 50)
+fviz_gap_stat(gap_stat)
+gap_stat
+```
+
+Interpretation: There are three groups in the dataset with common characteristics.
+
+#Clustering Validation: Average Silhouette Method
+
+We use the silhouette coefficient (silhouette width) to evaluate the goodness of our clustering.
+So, the interpretation of the silhouette width is the following:
+
+Si > 0 means that the observation is well clustered. The closest it is to 1, the best it is clustered.
+Si < 0 means that the observation was placed in the wrong cluster.
+Si = 0 means that the observation is between two clusters.
+
+The silhouette plot below gives us evidence that our clustering using five groups is good because there’s no negative silhouette width and most of the values are bigger than 0.5.
+
+```{r}
+sil <- silhouette(km$cluster, dist(dfaces))
+fviz_silhouette(sil)
+```
+
+Interpretation: There are three well-formed groups in the dataset (We still don't know characteristics of each group).
+
+
+#Extracting Results
+With most of these approaches suggesting three as the number of optimal clusters, we can perform the final analysis and extract the results using 3 clusters.
+
+The kmeans function also has a nstart option that attempts multiple initial configurations and reports on the best output. For example, adding nstart = 25 will generate 25 initial configurations. This approach is often recommended.
+
+```{r}
+#library(factoextra) 
+k3 <- kmeans(nor, centers = 3, nstart = 25)
+k3
+```
+
+#Principal Component Analysis (PCA)
+
+If there are more than two dimensions (variables) fviz_cluster perform principal component analysis (PCA) and plot the data points according to the first two principal components that explain the majority of the variance.
+
+```{r}
+str(k3)
+fviz_cluster(k3, data = dfaces)
+```
+
+
+Normalization
+```{r}
+z <- dfaces[,-c(1,1)]
+means <- apply(z,2,mean)
+sds <- apply(z,2,sd)
+nor <- scale(z,center=means,scale=sds)
+```
+
+Calculate distance matrix
+```{r}
+distance = dist(nor)
+```
+
+And we can extract the clusters and add to our initial dataset to do some descriptive statistics at the cluster level:
+
+
+#find means of each cluster
+```{r}
+aggregate(dfaces, by=list(cluster=km$cluster), mean)
+```
+We need to examine the clusters and determine a sensible way to interpret them.  Fortunately, we can use some tools to help us.
+
+```{r}
+table_clusters <- table(km$cluster)
+table_clusters
+```
+
+Check we added a new column to the dataset named "cluster" that assigned to each individual a group according to their characteristics
+```{r}
+dfaces$cluster <- km$cluster
+View(dfaces)
+```
+
+Finally, you may generate a table to explore this characteristics in detail. 
+
+First made sure that all values must be numerical to the cross-validation
+```{r}
+dfaces$neglected_food    <- as.factor(as.character(dfaces$neglected_food))
+dfaces$household_violence<- as.factor(as.character(dfaces$household_violence))
+dfaces$emotional_abuse   <- as.factor(as.character(dfaces$emotional_abuse))
+dfaces$poor_health2      <- as.factor(as.character(dfaces$poor_health2))
+dfaces$early_infection   <- as.factor(as.character(dfaces$early_infection))
+dfaces$migration_yo2    <- as.factor(as.character(dfaces$migration_yo2))
+```
+
+Look at the code as follows:
+
+```{r}
+#create table
+table_cluster <- table1(~ neglected_food + household_violence + emotional_abuse + poor_health2 + early_infection + migration_yo2 | cluster, data=dfaces)
+
+#call table
+table_cluster
+```
+
+Save data in a separated dataframe to merge with subsample biomarkers
+```{r }
+writexl::write_xlsx( x = dfaces, path =  '/Users/macbookpro/Documents/PhD Project/Data/SABE/dataframes/dfcluster.xlsx' )
+```
+
+
+**Step 3: Latent Class Analysis LCA)**
+
+Approach two: to conduct Latent Class Analysis (LCA) in R with poLCA package and same dataset dfaces.
+
+#Install and load poLCA package
+```{r}
+install.packages ("poLCA")
+library (poLCA)
+library(readxl)
+```
+
+#Define our LCA model with original data base.
+It is straightforward to replicate using the series of commands:
+
+```{r}
+f  <- cbind (neglected_food, household_violence, poor_health2, emotional_abuse, early_infection, migration_yo2) ~ 1
+
+#estimate the model with k-classes to identify the appropriate number of classes
+#The following code stems from this article. It runs a sequence of models with two to ten groups.
+
+M1 <- poLCA(f, data = dfaces, nclass = 2, graphs = TRUE, na.rm = TRUE)
+M2 <- poLCA(f, data = dfaces, nclass = 3, graphs = TRUE, na.rm = TRUE)
+M3 <- poLCA(f, data = dfaces, nclass = 4, graphs = TRUE, na.rm = TRUE)
+M4 <- poLCA(f, data = dfaces, nclass = 5, graphs = TRUE, na.rm = TRUE)
+M5 <- poLCA(f, data = dfaces, nclass = 6, graphs = TRUE, na.rm = TRUE)
+
+#5-10-class model has negative degrees of freedom, which means is not acceptable model
+#ALERT: negative degrees of freedom. 
+```
+
+#Plot some models
+```{r}
+plot(M1)
+```
+
+##using Ohlsen code model 2 to model 5 class###
+
+To get the standard-output for the best model from the poLCA-package:
+```{r}
+# define function
+f<-with(dfaces, cbind(neglected_food, household_violence, poor_health2, emotional_abuse, migration_yo2, early_infection)~1) #
+
+#------ run a sequence of models with 1-10 classes and print out the model with the lowest BIC
+max_II <- -100000
+min_bic <- 100000
+for(i in 2:5){
+  lc <- poLCA(f, dfaces, nclass=i, maxiter=3000, 
+              tol=1e-5, na.rm=FALSE,  
+              nrep=10, verbose=TRUE, calc.se=TRUE)
+  if(lc$bic < min_bic){
+    min_bic <- lc$bic
+    LCA_best_model<-lc
+  }
+}    	
+LCA_best_model
+```
+Interpretation of the outcome: using biomarkers subsample the best number of cluster to this dataset is 2, on the basis of lower BIC indicating better model fit and with two latent groups for our data.
+
+# Validation: Entropy of fitted latent class models:
+Entropy is a characteristics that allows me to check fi nt two-latent groups are well or not relfecting individual in the dataset (in few words, is an additionalvalidation criteria to make sure of the LCA outcome)
+```{r}
+nume.E <- -sum(M1$posterior * log(M1$posterior))
+##Denominator (n*log(K)): ## n is a sample size, and K is a number of class
+deno.E <- 4092*log(6)
+##Relative Entropy
+Entro <- 1-(nume.E/deno.E)
+Entro
+```
+Interpretation: Values above 50% in entropy is a good indicator.
+
+######RUN UNTIL HERE####
+
+
+
+
+
+
