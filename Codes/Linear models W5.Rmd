@@ -1,0 +1,257 @@
+---
+title: "Linear models W5"
+author: "Juan Rivillas"
+date: "27/09/2022"
+output: html_document
+---
+
+
+This R Markdown includes:
+
+**Step 1. Prepare work space (load and verifying dataset and packages)**
+**Step 2. Linear regression with two continuous variables**
+          Residual Analysis
+          Evaluating the Quality of the Linear Model.
+**Step 3. Linear Regression with a categorical Predictor**
+          Tabulate and plots models using tab model and ggcoefstats functions.
+**Step 4. Exercise to train dataset**
+        
+        
+Learning outcomes:
+-Explore assumptions, purposes, and uses.
+- Identify the correlation coefficient as a single measure of linear association.
+- Apply linear regression with a single predictor variable.
+- Assess model validity by checking model assumptions.
+- Assess model fitness by comparing the results produced by the model.
+- Interpret the weaknesses of Linear Models for binary and count outcomes.
+
+Data used: National Health Nutrition Examination Surveys and Mental Health Surveys.
+
+Step 1. Prepare work space 
+
+#Load packages for regression modelling
+```{r}
+library(ggplot2)             #Descriptive stats and data viz
+library(ggstatsplot)         #Basic stats and inference stats plots
+
+install.packages("sjPlot")  #Generate table with regression 
+library(sjPlot)             #Summary of regression Models as HTML
+library(sjmisc)
+library(sjlabelled)
+library(table1)
+```
+
+
+#load dataset, verifying structure dataset, data exploratory analysis, dispersion, and distribution values.
+This step was covered during W1-W4.I highly recommend you go back to the code and R documentation covered this first block of the course.
+
+Step 2. 
+###################################################
+###Linear regresion with two continuos variables###
+###################################################
+
+#Residual Analysis
+``Residual analysis examines these residual values to see what they can tell us about the model’s quality``.
+
+Residual values greater than zero mean that the regression model predicted a value that was too small compared to the actual measured value, and negative values indicate that the regression model predicted a value that was too large.
+
+Thus,if we plot the residual values, we would expect to see them distributed normally around zero for a well-fitted model.
+
+Option 1 plotting residuals values
+
+The following code plots the original data along with the fitted line
+```{r}
+#Building a simple linear regression model imposed on the data
+ba.bmi.lm <-lm(formula = biological_age  ~ bmi, data = regression_data)
+plot(ba.bmi.lm)
+```
+
+How should we interpret these values?
+If the line is a good fit with the data, we would expect residual values that are normally distributed around a mean of zero. (Recall that a normal distribution is also called a Gaussian distribution - this is the classic “bell curve”.)
+
+Option 2 plotting residuals
+
+The following function calls produce the residuals plot for our model
+```{r}
+#The following function plot residual vs fitted values
+plot(fitted(ba.bmi.lm),resid(ba.bmi.lm))
+```
+
+Interpretation
+In this plot, we see that the residuals tend to increase as we move to the right. Additionally, the residuals are slightly uniformly scattered above and below zero. Overall, this plot tells us that using the BMI as the sole predictor in the regression model does not sufficiently or fully explain the data.This does not mean that our simple linear regression model is useless, though.
+It only means that we may be able to construct a model that produces tighter residual values and better predictions.
+
+
+#Option 3 Plotting residuals: Quantile-versus-quantile Q-Q test
+Another test of the residuals uses the quantile-versus-quantile, or Q-Q, plot.
+
+The following function calls generate the Q-Q plot
+```{r}
+#The Q-Q plot for the SLR model developed using the Int2000 data
+qqnorm(resid(ba.bmi.lm)) > qqline(resid(ba.bmi.lm))
+```
+Interpretation of the outcome:
+If the residuals were normally distributed, we would expect the points plotted in this figure to follow a straight line.
+This behavior indicates that the residuals are normally distributed: see that the two ends do not diverge considerably from that line.
+``This pattern is indicative of a there is small skewed distribution``. 
+This test further confirms that using only the BMI as a predictor in the model is sufficient to explain the data.
+
+
+Option 4 plotting residuals condensed into one frame
+
+To condense the plots into one frame, the first line of code indicates that the plots should be displayed in a 2 by 2 grid.The “Scale-Location” plot is an alternate way of visualizing the residuals versus fitted values from the linear regression model, however, the residuals are standardized and then transformed by square-root.
+
+```{r}
+#Figure: All four default diagnostic plots for the SLR model developed using the Data
+par(mfrow=c(2,2)) > plot(ba.bmi.lm)
+```
+
+
+##Evaluating the Quality of the Model##
+
+The function summary() extracts some additional information that we can use to determine how well the data fit the resulting model.
+```{r}
+summary(ba.bmi.lm)
+```
+Interpretation of the outcome 
+
+(Pro-tip:Please review and understand this part of data fit the resulting model several times before interpretate models):
+
+**First proportion of the outcome (summary in the top)**
+#Residuals: 
+- The residuals are the differences between the actual measured values and the corresponding values on the fitted regression line.
+-each data point’s residual is the distance that the individual data point is above (positive residual) or below (negative residual) the regression line.
+-That is, a good model’s residuals should be roughly balanced around and not too far away from the mean of zero.
+-Minimum and maximum values of roughly the same magnitude, and first and third quartile values of roughly the same magnitude.
+
+**Second proportion of the  outcome (summary in the middle)**  
+
+#Coefficients:
+- This portion of the output shows the estimated coefficient values.
+- For a good model, we typically would like to see a standard  error that is at least five to ten times smaller than the corresponding coefficient.
+
+For example, the standard error for BMI is 29.64 times smaller than the coefficient value (1.12965/0.0381 = 29.64). This large ratio means that there is relatively little variability in the slope estimate, a1. The standard error for the intercept, a0, is 1.0509, which is far to be the same as the estimated value of -30.7062 for this coefficient.
+
+These different values suggest that there is less uncertainty in the estimate of this coefficient for this model. 
+
+#p-value
+In this example, the p-value for the slope estimate for clock is <2e-16 *** a tiny value. This means, that the probability of observing a t value of 29.64 or more extreme (in absolute value), assuming there is no linear relationship between the BMI and the biological age, is less than <2e-16 ***. Since this value is so small, we can say that there is strong evidence of a linear relationship between body-mass index and biological age. To know if this relationship is actually linear, we need to do further work to check the validity of the relationship.
+
+#intercept
+Here, the p-value for the intercept is <2e-16, meaning that the probability of observing a t value of -29.22 or more extreme, assuming that the true intercept value is 0, is <2e-16. Since this value is small, ``we can say that there is strong evidence that the true intercept is not zero``. This is due to the amount of variability in the estimates for the intercept.
+
+**Third proportion of the outcome (Summary in the bottom):**
+These final few lines in the output provide some statistical information about the quality of the regression model’s fit to the data.
+
+#The Multiple R-squared value is a number between 0 and 1. 
+``It is a statistical measure of how well the model describes the measured data``. 
+We Multiplying this value by 100 gives a value that we can interpret as a percentage between 0 and 100. The reported R2 of 0.20
+for this model means that 20% of the variability in performance is explained by the variation in BMI.
+
+
+Step 3. 
+######################################################
+### Linear Regression with a categorical Predictor ###
+######################################################
+
+Now an example with categorical predictors: exposure (childhood adversity Low or Risk)
+
+Fit a linear regression model for biological age in years (outcome), using childhood adversity as the explanatory variable (exposure/predictor):
+
+First model with adverse childhood experiences.
+```{r}
+lm.ba <- lm(biological_age ~ aces, data=regression_data)
+lm.ba
+```
+
+Same model controlling by gender
+```{r}
+lm.ba.aces <- lm(biological_age ~ aces + gender, data=regression_data)
+lm.ba.aces
+```
+
+#The function summary() extracts some additional information that we can use to determine how well the data fit the resulting model.
+
+Evaluating the quality of the Linear Model.
+```{r}
+summary (lm.ba.aces)
+```
+
+
+Interpretation:
+This means that the linear model for this example is estimated as follows:
+
+BA predictions = 1.2597 +  -1.2840 * gender
+
+The output shows two parameters being estimated. One is the y-intercept and is interpreted the same as with a continuous attribute. This term would represent the average minimum biological age when all of the attributes in the model are 0. What is not clear is what value is 0 from the model above. This will become more clear once the interpretation for the slope term is expanded upon next.
+
+We need interpretate the slope as the change in the outcome for a one unit increase in the predictor attribute. 
+
+This would mean that the linear slope coefficient of 1.2840 indicates that the average minimum biological age increases by about 1.2840 years for a one unit increase in the high risk group.
+
+
+Linear model of childhood socioeconomic position controlling by gender
+```{r}
+lm.ba.sep <- lm(biological_age ~ low_childhood_sep + gender, data=regression_data)
+lm.ba.sep
+```
+
+
+Interpretation:
+
+BA predictions = -0.7116 +  1.4524 * Low SEP
+
+This would mean that the linear slope coefficient of 1.4524 ``indicates that the average minimum biological age increases by about 1.4524 years for a one unit increase in the low childhood SEP group``.
+
+
+#Tabulate simple regression models and extract results
+
+There is other options to add these coefficient and effects sizes in one table.
+tab_model() can print multiple models at once, which are then printed side-by-side. Identical coefficients are matched in a row.
+```{r}
+tab_model(lm.ba.aces, lm.ba.sep)
+```
+
+
+
+###Plot coefficients and p values using library(ggstatsplot) (My favorite) ###
+```{r}
+## model
+ggcoefstats(lm.ba.aces)
+ggcoefstats(lm.ba.sep)
+```
+
+Interpretation: effect sizes are displays in this graph: larger effects for low childhood sep (+1,45 years)
+
+
+
+**Exercise model fitting and search for Best Models***
+
+##Model Fitting##
+
+Given data on in terms of education, adult sep, violence, neglected food and gender.
+
+Test association between two exposure (categorical var) and one outcome (continuos var)
+
+
+Steps
+
+Steps
+
+Open file: regression_data hosted in GitHub
+
+1) Build one simple linear regression model: 
+   - exposure: childhood poverty and outcome: biological age (in years).
+   - control by gender
+    
+2) Model Fitting Q-Q plot and all four default diagnostic plots. 
+    Search for Best Models
+  - Check the scatter and box plots
+  - Check MSE, Rsquared and AIC
+
+3) Evaluating the quality of the Linear Model.
+
+4) Prepare your report and intepretate outcomes
+  - Plot simple linear regression model
+  - Tabulate linear regression model
+  
