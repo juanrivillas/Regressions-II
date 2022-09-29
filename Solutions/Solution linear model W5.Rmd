@@ -1,0 +1,82 @@
+---
+title: "Exercise and solution Linear models"
+author: "Juan Rivillas"
+date: "29/09/2022"
+output: html_document
+---
+
+#######################################################
+###        Exercise linear regression models        ###
+#######################################################
+
+
+Steps
+
+Open file: regression_data hosted in GitHub
+
+1) Build one simple linear regression model: 
+   - exposure: childhood poverty and outcome: biological age (in years).
+   - control by gender
+    
+2) Model Fitting Q-Q plot and all four default diagnostic plots. 
+    Search for Best Models
+  - Check the scatter and box plots
+  - Check MSE, Rsquared and AIC
+
+3) Evaluating the quality of the Linear Model.
+
+4) Prepare your report and intepretate outcomes
+  - Plot simple linear regression model
+  - Tabulate linear regression model
+  
+  
+**Solution exercise regression modelling**
+  
+1) Build one simple linear regression model:   
+```{r}
+#Building a simple linear regression model imposed on the data
+lm.exe <-lm(formula = biological_age  ~ low_childhood_sep, data = regression_data)
+
+#check coefficient model
+lm.exe 
+```
+
+Linear model of low childhood sep controlling by gender
+```{r}
+lm.exe.gen <- lm(biological_age ~ low_childhood_sep + gender, data=regression_data)
+lm.exe.gen
+```
+
+
+2) Model Fitting Q-Q plot and all four default diagnostic plots. 
+```{r}
+#The Q-Q plot for the LR model developed using the Int2000 data
+qqnorm(resid(lm.exe)) > qqline(resid(lm.exe))
+```
+  
+```{r}
+#Figure: All four default diagnostic plots for the SLR model developed using the Data
+par(mfrow=c(2,2)) > plot(lm.exe)
+```
+
+
+3) Evaluating the quality of the Linear Model displaying information with summary()
+
+```{r}
+summary (lm.exe.gen)
+```
+
+4) Prepare your report and intepretate outcomes
+
+```{r}
+#Tabulate simple regression model and extract results using tab_model().
+tab_model(lm.exe.gen)
+```
+
+```{r}
+#Plot coefficients and p values using library(ggstatsplot) (My favorite) #
+ggcoefstats(lm.exe.gen)
+```
+
+
+###FIN####
